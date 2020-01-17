@@ -11,8 +11,14 @@ spring:
       driver-class-name: com.mysql.cj.jdbc.Driver
       test-while-idle: true
 
+  thymeleaf:
+    mode: LEGACYHTML5
+    prefix: classpath:/templates/
+    suffix: .html
+    template-resolver-order: 0
+    cache: false
+
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-    #配置返回数据库(column下划线命名&&返回java实体是驼峰命名)
     map-underscore-to-camel-case: true

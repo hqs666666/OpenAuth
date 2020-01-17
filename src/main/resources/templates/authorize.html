@@ -1,0 +1,106 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta content="text/html;charset=UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>授权管理</title>
+    <script src="https://cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style>
+        .form {
+            background: rgba(199, 196, 174, 0.2);
+            width: 500px;
+            margin: 120px auto;
+        }
+
+        /*阴影*/
+        .fa {
+            display: inline-block;
+            top: 10px;
+            left: 6px;
+            position: relative;
+        }
+
+        p, i {
+            font-size: 16px;
+            padding-left: 26px;
+        }
+
+        .errMsg {
+            color: red;
+        }
+    </style>
+    <script>
+        function agree() {
+            let data = {
+                client_id: document.getElementById("clientId").value,
+                scope: document.getElementById("scope").value,
+                redirect_uri: document.getElementById("redirectUri").value,
+                response_type: document.getElementById("responseType").value,
+                state: document.getElementById("state").value
+            };
+            fetch('/oauth2/agree', {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers:{
+                    'Content-Type': 'application/json'
+                }
+            }).then(res => res.json()).then(res => {
+                if(res.success)
+                    window.location.href = res.data;
+            });
+        }
+
+        //拒绝授权
+        function reject() {
+            let userAgent = navigator.userAgent;
+            if (userAgent != null && (userAgent.indexOf("Firefox") != -1 || userAgent.indexOf("Chrome") != -1)) {
+                window.location.href = "about:blank";
+                window.close();
+            } else {
+                window.opener = null;
+                window.open("", "_self");
+                window.close();
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="container">
+    <div class="form row" th:if="${resultMsg.success}">
+        <div class="form-horizontal col-md-offset-3" id="login_form">
+            <h3 class="form-title">应用 <span style="color:#FF0000" th:text="${clientInfo.clientName}">xxx</span> 请求授权
+            </h3>
+            <div class="col-md-9">
+                <input type="hidden" id="responseType1" name="response_type1"
+                       th:value="${resultMsg.toJson()}">
+                <div class="form-group">
+                    <input type="hidden" id="clientId" name="client_id"
+                           th:value="${clientInfo.authorizationInfo.client_id}">
+                    <input type="hidden" id="scope" name="scope" th:value="${clientInfo.authorizationInfo.scope}">
+                    <input type="hidden" id="redirectUri" name="redirect_uri"
+                           th:value="${clientInfo.authorizationInfo.redirect_uri}">
+                    <input type="hidden" id="responseType" name="response_type"
+                           th:value="${clientInfo.authorizationInfo.response_type}">
+                    <input type="hidden" id="state" name="state" th:value="${clientInfo.authorizationInfo.state}">
+                    <i class="fa fa-check-square" aria-hidden="true" th:switch="${clientInfo.authorizationInfo.scope}">
+                        <span th:case="userinfo">获得你的所有信息</span>
+                        <span th:case="basic">获得你的昵称、邮箱等基本信息</span>
+                    </i>
+                </div>
+                <div class="form-group">
+                    <span class="errMsg" id="errMsg" style="display: none">错误提示</span>
+                </div>
+                <div class="form-group col-md-offset-9">
+                    <button type="submit" class="btn btn-success pull-left" name="submit" onclick="agree()">授权</button>
+                    <button type="button" class="btn btn-success pull-right" onclick="reject()">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -6,7 +6,8 @@ public enum AppStatusCode {
     ClientNotFount("客户端不存在",10001),
     ClientDisabled("客户端已被禁用",10002),
     UnsupportedResponseType("不支持的响应类型",10003),
-    UnsupportedScope("不支持的scope",10004);
+    UnsupportedScope("不支持的scope",10004),
+    UserValidFail("用户验证失败",20001);
 
     private int code;
     private String value;

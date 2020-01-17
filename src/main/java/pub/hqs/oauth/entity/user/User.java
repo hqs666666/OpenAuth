@@ -2,7 +2,7 @@ package pub.hqs.oauth.entity.user;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 public class User {
@@ -11,7 +11,7 @@ public class User {
     private String password;
     private String mobile;
     private String email;
-    private Date createTime;
-    private Date updateTime;
+    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
     private Integer status;
 }

@@ -2,7 +2,7 @@ package pub.hqs.oauth.entity.auth;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 public class Client {
@@ -13,8 +13,8 @@ public class Client {
     private String redirectUri;
     private String description;
     private String createUser;
-    private Date createTime;
+    private LocalDateTime createTime;
     private String updateUser;
-    private Date updateTime;
+    private LocalDateTime updateTime;
     private Integer status;
 }

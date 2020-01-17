@@ -1,8 +1,8 @@
 package pub.hqs.oauth.controller;
 
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController("/account")
 public class AccountController extends BaseController {
 
 }
