@@ -4,103 +4,135 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>授权管理</title>
-    <script src="https://cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
-    <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <style>
-        .form {
-            background: rgba(199, 196, 174, 0.2);
-            width: 500px;
-            margin: 120px auto;
-        }
-
-        /*阴影*/
-        .fa {
-            display: inline-block;
-            top: 10px;
-            left: 6px;
-            position: relative;
-        }
-
-        p, i {
-            font-size: 16px;
-            padding-left: 26px;
-        }
-
-        .errMsg {
-            color: red;
-        }
-    </style>
-    <script>
-        function agree() {
-            let data = {
-                client_id: document.getElementById("clientId").value,
-                scope: document.getElementById("scope").value,
-                redirect_uri: document.getElementById("redirectUri").value,
-                response_type: document.getElementById("responseType").value,
-                state: document.getElementById("state").value
-            };
-            fetch('/oauth2/agree', {
-                method: 'POST',
-                body: JSON.stringify(data),
-                headers:{
-                    'Content-Type': 'application/json'
-                }
-            }).then(res => res.json()).then(res => {
-                if(res.success)
-                    window.location.href = res.data;
-            });
-        }
-
-        //拒绝授权
-        function reject() {
-            let userAgent = navigator.userAgent;
-            if (userAgent != null && (userAgent.indexOf("Firefox") != -1 || userAgent.indexOf("Chrome") != -1)) {
-                window.location.href = "about:blank";
-                window.close();
-            } else {
-                window.opener = null;
-                window.open("", "_self");
-                window.close();
-            }
-        }
-    </script>
+    <title>登录</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 </head>
 <body>
-<div class="container">
-    <div class="form row" th:if="${resultMsg.success}">
-        <div class="form-horizontal col-md-offset-3" id="login_form">
-            <h3 class="form-title">应用 <span style="color:#FF0000" th:text="${clientInfo.clientName}">xxx</span> 请求授权
-            </h3>
-            <div class="col-md-9">
-                <input type="hidden" id="responseType1" name="response_type1"
-                       th:value="${resultMsg.toJson()}">
-                <div class="form-group">
-                    <input type="hidden" id="clientId" name="client_id"
-                           th:value="${clientInfo.authorizationInfo.client_id}">
-                    <input type="hidden" id="scope" name="scope" th:value="${clientInfo.authorizationInfo.scope}">
-                    <input type="hidden" id="redirectUri" name="redirect_uri"
-                           th:value="${clientInfo.authorizationInfo.redirect_uri}">
-                    <input type="hidden" id="responseType" name="response_type"
-                           th:value="${clientInfo.authorizationInfo.response_type}">
-                    <input type="hidden" id="state" name="state" th:value="${clientInfo.authorizationInfo.state}">
-                    <i class="fa fa-check-square" aria-hidden="true" th:switch="${clientInfo.authorizationInfo.scope}">
-                        <span th:case="userinfo">获得你的所有信息</span>
-                        <span th:case="basic">获得你的昵称、邮箱等基本信息</span>
-                    </i>
-                </div>
-                <div class="form-group">
-                    <span class="errMsg" id="errMsg" style="display: none">错误提示</span>
-                </div>
-                <div class="form-group col-md-offset-9">
-                    <button type="submit" class="btn btn-success pull-left" name="submit" onclick="agree()">授权</button>
-                    <button type="button" class="btn btn-success pull-right" onclick="reject()">取消</button>
+<div id="app">
+    <div class="container">
+        <div class="box">
+            <div class="login-box" th:if="${resultMsg.success}">
+                <div class="title">Login</div>
+                <el-form :model="loginForm" status-icon :rules="rules" ref="loginForm">
+                    <input type="hidden" th:value="${resultMsg.toJson()}" id="loginMsg"/>
+                    <input type="hidden" th:value="${hasLogin}" id="hasLogin" />
+                    <el-form-item prop="username">
+                        <el-input v-model="loginForm.username" clearable prefix-icon="el-icon-user"></el-input>
+                    </el-form-item>
+                    <el-form-item prop="password">
+                        <el-input v-model="loginForm.password" show-password prefix-icon="el-icon-lock"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="submitForm('loginForm')" class="full-btn">登录</el-button>
+                    </el-form-item>
+                </el-form>
+                <div class="auth-info">使用你的账号登录<span class="text">{{loginMsg.clientName}}</span></div>
+            </div>
+            <div th:unless="${resultMsg.success}" class="error">
+                <div>对第三方应用进行授权时出现错误</div>
+                <div>错误码：<span th:text="${resultMsg.code}"></span></div>
+                <div>信息：<span th:text="${resultMsg.message}"></span></div>
+            </div>
+
+            <div class="auth-box display">
+                <p>应用<span class="text">{{loginMsg.clientName}}</span>请求授权</p>
+                <div>将允许<span class="text">{{loginMsg.clientName}}</span>进行以下操作：</div>
+                <div>获得你的所有信息</div>
+                <div class="auth-btn">
+                    <el-button type="primary" size="small" @click="agree">同意</el-button>
+                    <el-button size="small" @click="reject">取消</el-button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script th:inline="javascript">
+    new Vue({
+        el: "#app",
+        data() {
+            return {
+                loginForm: {
+                    username: '',
+                    password: ''
+                },
+                loginMsg: {},
+                rules: {
+                    username: [
+                        {required: true, message: '请输入用户名', trigger: 'blur'},
+                        {min: 3, max: 5, message: '长度在 3 到 10 个字符', trigger: 'blur'}
+                    ],
+                    password: [
+                        {required: true, message: '请输入密码', trigger: 'blur'},
+                        {min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur'}
+                    ],
+                }
+            }
+        },
+        mounted() {
+            var element = document.getElementById("loginMsg");
+            if(element){
+                var loginMsg = element.value;
+                this.loginMsg = JSON.parse(loginMsg);
+
+                var hasLogin = document.getElementById("hasLogin").value;
+                if(hasLogin === "true"){
+                    this.showAuthBox();
+                }
+            }
+        },
+        methods: {
+            submitForm(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if(valid){
+                        var that = this;
+                        fetch('/oauth2/authorize',{
+                            method:'POST',
+                            body: JSON.stringify(that.loginForm),
+                            headers:{
+                                'Content-Type': 'application/json'
+                            }
+                        }).then(res => res.json()).then(res => {
+                            if(!res.success){
+                                that.$message.error(res.message);
+                                return false;
+                            }
+                            that.showAuthBox();
+                        });
+                    }else{
+                        return false;
+                    }
+                });
+            },
+            agree(){
+                var that = this;
+                fetch('/oauth2/agree', {
+                    method: 'POST',
+                    body: JSON.stringify(that.loginMsg.authorizationInfo),
+                    headers:{
+                        'Content-Type': 'application/json'
+                    }
+                }).then(res => res.json()).then(res => {
+                    if(!res.success){
+                        that.$message.error(res.message); return;
+                    }
+                    window.location.href = res.data;
+                });
+            },
+            reject(){
+                window.location.href = this.loginMsg.authorizationInfo.redirect_uri;
+            },
+            showAuthBox(){
+                var box = document.querySelector(".box");
+                var loginBox = document.querySelector(".login-box");
+                var authBox = document.querySelector(".auth-box");
+                box.removeChild(loginBox);
+                authBox.setAttribute('class','auth-box');
+            }
+        }
+    });
+</script>
 </body>
 </html>

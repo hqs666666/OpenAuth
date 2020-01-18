@@ -1,6 +1,6 @@
 package pub.hqs.oauth.dto;
 
-import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 
 @Data
@@ -10,7 +10,14 @@ public class ResultMsg {
     private String Message;
     private Object Data;
 
-    public String toJson(){
-        return JSON.toJSONString(this.Data);
+    public String toJson() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(this.Data);
+            return json;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

@@ -18,6 +18,11 @@ spring:
     template-resolver-order: 0
     cache: false
 
+  redis:
+    database: 7
+    host: t.cn
+    port: 6379
+
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

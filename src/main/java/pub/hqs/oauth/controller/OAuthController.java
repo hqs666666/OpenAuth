@@ -4,20 +4,20 @@ import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
 import pub.hqs.oauth.dto.AuthorizationInfo;
-import pub.hqs.oauth.dto.ClientInfo;
 import pub.hqs.oauth.dto.ResultMsg;
+import pub.hqs.oauth.dto.UserDto;
 import pub.hqs.oauth.dto.UserLogin;
 import pub.hqs.oauth.service.authorization.IAuthorizationService;
 import pub.hqs.oauth.service.user.IUserService;
 import pub.hqs.oauth.utils.AppConstants;
+import pub.hqs.oauth.utils.AppStatusCode;
 import pub.hqs.oauth.utils.CookieHelper;
 
 import javax.servlet.http.HttpServletResponse;
-import java.net.URLDecoder;
 
 @Api(tags = "授权相关接口")
 @Controller
@@ -30,38 +30,43 @@ public class OAuthController extends BaseController {
     private IUserService userService;
 
     @GetMapping("authorize")
-    public ModelAndView authorize(@Validated AuthorizationInfo dto) {
-        ModelAndView modelAndView = new ModelAndView("login");
-        ResultMsg resultMsg = authorizationService.getClient(dto);
-        modelAndView.addObject("resultMsg", resultMsg);
-        modelAndView.addObject("clientInfo", (ClientInfo) resultMsg.getData());
-        return modelAndView;
+    public String authorize(@Validated AuthorizationInfo dto, @CookieValue(value = AppConstants.SESSION_NAME, defaultValue = "-1") String cookieName, Model model) {
+        ResultMsg resultMsg = authorizationService.validClient(dto);
+        if (resultMsg.getSuccess()) {
+            UserDto user = userService.getUserInfo(cookieName);
+            if (user != null) {
+                Boolean hasAuth = authorizationService.hasAuthorizeClient(user.getId(), dto.getClient_id());
+                if (hasAuth) {
+                    resultMsg = authorizationService.getRedirectUrl(dto, user.getId());
+                    if (resultMsg.getSuccess()) {
+                        return "redirect:" + resultMsg.getData().toString();
+                    }
+                }
+            }
+            resultMsg = authorizationService.getClient(dto);
+            model.addAttribute("hasLogin", user != null);
+        }
+        model.addAttribute("resultMsg", resultMsg);
+        return "authorize";
     }
 
+    @ResponseBody
     @PostMapping("authorize")
-    public ModelAndView login(@Validated UserLogin dto, HttpServletResponse response) {
-        ModelAndView modelAndView = new ModelAndView("authorize");
+    public ResultMsg login(@RequestBody UserLogin dto, HttpServletResponse response) {
         ResultMsg resultMsg = userService.validUser(dto);
         if (resultMsg.getSuccess()) {
             CookieHelper.setCookie(response, AppConstants.SESSION_NAME, resultMsg.getData().toString());
-            resultMsg = authorizationService.getClient(dto);
+            //如果已经授权过了，登录后直接跳转回页面
         }
-
-        modelAndView.addObject("resultMsg", resultMsg);
-        modelAndView.addObject("clientInfo", (ClientInfo) resultMsg.getData());
-        return modelAndView;
+        return resultMsg;
     }
 
     @ResponseBody
     @PostMapping("agree")
-    public ResultMsg agree(@RequestBody @Validated AuthorizationInfo dto) {
-        ResultMsg result = authorizationService.getAuthorizationCode(dto);
-        if (!result.getSuccess()) return result;
-
-        String redirectUrl = URLDecoder.decode(dto.getRedirect_uri());
-        String joinStr = redirectUrl.contains("?") ? "&" : "?";
-        redirectUrl += joinStr + "code=" + result.getData() + "&state=" + dto.getState();
-        result.setData(redirectUrl);
+    public ResultMsg agree(@RequestBody @Validated AuthorizationInfo dto, @CookieValue(value = AppConstants.SESSION_NAME, defaultValue = "-1") String cookieName) {
+        UserDto user = userService.getUserInfo(cookieName);
+        if (user == null) return createErrorMsg(AppStatusCode.UserValidFail);
+        ResultMsg result = authorizationService.getRedirectUrl(dto, user.getId());
         return result;
     }
 
