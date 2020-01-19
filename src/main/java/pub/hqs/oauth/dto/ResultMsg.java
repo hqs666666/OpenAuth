@@ -2,6 +2,7 @@ package pub.hqs.oauth.dto;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
+import pub.hqs.oauth.utils.AppStatusCode;
 
 @Data
 public class ResultMsg {
@@ -19,5 +20,31 @@ public class ResultMsg {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public ResultMsg createResultMsg(Object data) {
+        AppStatusCode statusCode = AppStatusCode.Ok;
+        ResultMsg result = new ResultMsg();
+        result.setSuccess(true);
+        result.setMessage(statusCode.getValue());
+        result.setCode(statusCode.getCode());
+        result.setData(data);
+        return result;
+    }
+
+    public ResultMsg createErrorMsg(AppStatusCode statusCode){
+        ResultMsg result = new ResultMsg();
+        result.setSuccess(false);
+        result.setMessage(statusCode.getValue());
+        result.setCode(statusCode.getCode());
+        return result;
+    }
+
+    public ResultMsg createErrorMsg(AppStatusCode statusCode, String msg){
+        ResultMsg result = new ResultMsg();
+        result.setSuccess(false);
+        result.setMessage(msg);
+        result.setCode(statusCode.getCode());
+        return result;
     }
 }

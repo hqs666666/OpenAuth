@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import pub.hqs.oauth.annotation.Authorize;
 import pub.hqs.oauth.dto.AuthorizationInfo;
 import pub.hqs.oauth.dto.ResultMsg;
 import pub.hqs.oauth.dto.UserDto;
@@ -17,7 +18,9 @@ import pub.hqs.oauth.utils.AppConstants;
 import pub.hqs.oauth.utils.AppStatusCode;
 import pub.hqs.oauth.utils.CookieHelper;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 @Api(tags = "授权相关接口")
 @Controller
@@ -30,10 +33,10 @@ public class OAuthController extends BaseController {
     private IUserService userService;
 
     @GetMapping("authorize")
-    public String authorize(@Validated AuthorizationInfo dto, @CookieValue(value = AppConstants.SESSION_NAME, defaultValue = "-1") String cookieName, Model model) {
+    public String authorize(@Validated AuthorizationInfo dto, @CookieValue(value = AppConstants.SESSION_NAME,defaultValue = "-1") String cookie, Model model) {
         ResultMsg resultMsg = authorizationService.validClient(dto);
         if (resultMsg.getSuccess()) {
-            UserDto user = userService.getUserInfo(cookieName);
+            UserDto user = userService.getUserInfo(cookie);
             if (user != null) {
                 Boolean hasAuth = authorizationService.hasAuthorizeClient(user.getId(), dto.getClient_id());
                 if (hasAuth) {
@@ -61,17 +64,16 @@ public class OAuthController extends BaseController {
         return resultMsg;
     }
 
+    @Authorize
     @ResponseBody
     @PostMapping("agree")
-    public ResultMsg agree(@RequestBody @Validated AuthorizationInfo dto, @CookieValue(value = AppConstants.SESSION_NAME, defaultValue = "-1") String cookieName) {
-        UserDto user = userService.getUserInfo(cookieName);
+    public ResultMsg agree(@Validated @RequestBody AuthorizationInfo dto, HttpServletRequest request) {
+        ResultMsg resultMsg = authorizationService.validClient(dto);
+        if(!resultMsg.getSuccess()) return resultMsg;
+        HttpSession session = request.getSession();
+        UserDto user = (UserDto) session.getAttribute(AppConstants.SESSION_NAME);
         if (user == null) return createErrorMsg(AppStatusCode.UserValidFail);
-        ResultMsg result = authorizationService.getRedirectUrl(dto, user.getId());
-        return result;
-    }
-
-    @PostMapping("access_token")
-    public ResultMsg token() {
-        return null;
+        resultMsg = authorizationService.getRedirectUrl(dto, user.getId());
+        return resultMsg;
     }
 }

@@ -34,6 +34,7 @@ public class AuthorizationService extends BaseService<ClientMapper, Client> impl
     private ClientUserMapper clientUserMapper;
 
     public ResultMsg validClient(AuthorizationInfo dto) {
+        if (dto == null) return createErrorMsg(AppStatusCode.BadRequest);
         if (!dto.getResponse_type().equals(AppConstants.RESPONSE_TYPE_CODE))
             return createErrorMsg(AppStatusCode.UnsupportedResponseType);
         Scope scope = scopeMapper.selectOne(new QueryWrapper<Scope>().eq("name", dto.getScope()));
@@ -42,6 +43,8 @@ public class AuthorizationService extends BaseService<ClientMapper, Client> impl
         Client client = getOne(new QueryWrapper<Client>().eq("client_id", dto.getClient_id()));
         if (client == null) return createErrorMsg(AppStatusCode.ClientNotFount);
         if (client.getStatus() != 1) return createErrorMsg(AppStatusCode.ClientDisabled);
+        if (!dto.getRedirect_uri().contains(client.getRedirectUri()))
+            return createErrorMsg(AppStatusCode.RedirectUriFail);
         return createResultMsg(client);
     }
 

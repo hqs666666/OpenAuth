@@ -5,22 +5,20 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import pub.hqs.oauth.dto.ResultMsg;
 import pub.hqs.oauth.utils.AppStatusCode;
 
-public class BaseService<M extends BaseMapper<T>,T> extends ServiceImpl<M,T> implements IBaseService<T> {
+public class BaseService<M extends BaseMapper<T>, T> extends ServiceImpl<M, T> implements IBaseService<T> {
 
-    protected ResultMsg createResultMsg(Object data){
+    protected ResultMsg createResultMsg(Object data) {
         ResultMsg result = new ResultMsg();
-        result.setSuccess(true);
-        result.setMessage(AppStatusCode.Ok.getValue());
-        result.setCode(AppStatusCode.Ok.getCode());
-        result.setData(data);
-        return result;
+        return result.createResultMsg(data);
     }
 
-    protected ResultMsg createErrorMsg(AppStatusCode statusCode){
+    protected ResultMsg createResultMsg() {
         ResultMsg result = new ResultMsg();
-        result.setSuccess(false);
-        result.setMessage(statusCode.getValue());
-        result.setCode(statusCode.getCode());
-        return result;
+        return result.createResultMsg(null);
+    }
+
+    protected ResultMsg createErrorMsg(AppStatusCode statusCode) {
+        ResultMsg result = new ResultMsg();
+        return result.createErrorMsg(statusCode);
     }
 }

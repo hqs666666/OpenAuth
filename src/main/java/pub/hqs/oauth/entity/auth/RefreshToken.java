@@ -9,7 +9,7 @@ public class RefreshToken {
     private String id;
     private String tokenId;
     private String refreshToken;
-    private Long expiresIn;
+    private LocalDateTime expiresIn;
     private String createUser;
     private LocalDateTime createTime;
     private String updateUser;

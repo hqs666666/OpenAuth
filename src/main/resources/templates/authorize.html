@@ -72,12 +72,12 @@
             }
         },
         mounted() {
-            var element = document.getElementById("loginMsg");
+            let element = document.getElementById("loginMsg");
             if(element){
-                var loginMsg = element.value;
+                let loginMsg = element.value;
                 this.loginMsg = JSON.parse(loginMsg);
 
-                var hasLogin = document.getElementById("hasLogin").value;
+                let hasLogin = document.getElementById("hasLogin").value;
                 if(hasLogin === "true"){
                     this.showAuthBox();
                 }
@@ -87,7 +87,7 @@
             submitForm(formName) {
                 this.$refs[formName].validate((valid) => {
                     if(valid){
-                        var that = this;
+                        let that = this;
                         fetch('/oauth2/authorize',{
                             method:'POST',
                             body: JSON.stringify(that.loginForm),
@@ -107,7 +107,7 @@
                 });
             },
             agree(){
-                var that = this;
+                let that = this;
                 fetch('/oauth2/agree', {
                     method: 'POST',
                     body: JSON.stringify(that.loginMsg.authorizationInfo),
@@ -125,9 +125,9 @@
                 window.location.href = this.loginMsg.authorizationInfo.redirect_uri;
             },
             showAuthBox(){
-                var box = document.querySelector(".box");
-                var loginBox = document.querySelector(".login-box");
-                var authBox = document.querySelector(".auth-box");
+                let box = document.querySelector(".box");
+                let loginBox = document.querySelector(".login-box");
+                let authBox = document.querySelector(".auth-box");
                 box.removeChild(loginBox);
                 authBox.setAttribute('class','auth-box');
             }

@@ -1,3 +1,6 @@
+server:
+  port: 7000
+
 spring:
   datasource:
     druid:
@@ -20,8 +23,14 @@ spring:
 
   redis:
     database: 7
-    host: t.cn
+    host: localhost
     port: 6379
+
+custom:
+  access-token:
+    expires-hour: 2
+  refresh-token:
+    expires-day: 7
 
 mybatis-plus:
   configuration:
