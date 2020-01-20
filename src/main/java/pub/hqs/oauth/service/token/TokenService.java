@@ -1,24 +1,29 @@
 package pub.hqs.oauth.service.token;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pub.hqs.oauth.dto.ResultMsg;
 import pub.hqs.oauth.dto.token.ReqAccessToken;
+import pub.hqs.oauth.dto.token.ReqRefreshToken;
 import pub.hqs.oauth.dto.token.RspAccessToken;
 import pub.hqs.oauth.entity.auth.*;
 import pub.hqs.oauth.entity.user.User;
 import pub.hqs.oauth.mapper.*;
 import pub.hqs.oauth.service.BaseService;
+import pub.hqs.oauth.service.client.IClientService;
 import pub.hqs.oauth.service.user.IUserService;
 import pub.hqs.oauth.utils.AppEnums;
 import pub.hqs.oauth.utils.AppStatusCode;
 import pub.hqs.oauth.utils.IdHelper;
+import pub.hqs.oauth.utils.TokenUtils;
 
 import javax.annotation.Resource;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalUnit;
 
 @Service
 public class TokenService extends BaseService<AccessTokenMapper, AccessToken> implements ITokenService {
@@ -26,7 +31,7 @@ public class TokenService extends BaseService<AccessTokenMapper, AccessToken> im
     @Resource
     private AuthCodeMapper authCodeMapper;
     @Resource
-    private ClientMapper clientMapper;
+    private IClientService clientService;
     @Resource
     private ClientUserMapper clientUserMapper;
     @Resource
@@ -42,12 +47,8 @@ public class TokenService extends BaseService<AccessTokenMapper, AccessToken> im
         if (dto == null) return createErrorMsg(AppStatusCode.ParamsValidFail);
         if (!dto.getGrant_type().equals(AppEnums.GrantType.AuthorizationCode.getValue()))
             return createErrorMsg(AppStatusCode.GrantTypeFail);
-        Client client = clientMapper.selectOne(new QueryWrapper<Client>()
-                .eq("client_id", dto.getClient_id())
-                .eq("client_secret", dto.getClient_secret()));
-        if (client == null) return createErrorMsg(AppStatusCode.ClientNotFount);
-        if (client.getStatus() != 1) return createErrorMsg(AppStatusCode.ClientDisabled);
-        return createResultMsg(client);
+        ResultMsg resultMsg = clientService.getClient(dto.getClient_id(), dto.getClient_secret());
+        return resultMsg;
     }
 
     public ResultMsg validClientUser(String userId, String clientId) {
@@ -73,28 +74,44 @@ public class TokenService extends BaseService<AccessTokenMapper, AccessToken> im
     }
 
     @Transactional
-    public ResultMsg generateToken(String userId, String scope, ReqAccessToken dto) {
+    public ResultMsg getAccessToken(String userId, String scope, ReqAccessToken dto) {
         User user = userService.getById(userId);
-        String token = "";
+        if (user == null) return createErrorMsg(AppStatusCode.UserValidFail);
+
+        ResultMsg resultMsg = clientService.getClient(dto.getClient_id(), "");
+        if (!resultMsg.getSuccess()) return resultMsg;
+        Client client = (Client) resultMsg.getData();
+
+        resultMsg = generateToken(userId, user.getUsername(), client, dto.getGrant_type(), scope);
+        if (!resultMsg.getSuccess()) return createErrorMsg(AppStatusCode.TokenFail);
+        AccessToken accessToken = (AccessToken) resultMsg.getData();
+
+        resultMsg = generateRefreshToken(accessToken.getId(), userId);
+        if (!resultMsg.getSuccess()) return createErrorMsg(AppStatusCode.TokenFail);
+
+        RspAccessToken response = new RspAccessToken(accessToken.getAccessToken(), resultMsg.getData().toString(), expiresHour * 60 * 60);
+        return createResultMsg(response);
+    }
+
+    public ResultMsg generateToken(String userId, String username, Client client, String grantType, String scope) {
+        String token = TokenUtils.generate(client.getClientName(), client.getClientSecret(), userId);
         AccessToken accessToken = new AccessToken();
         accessToken.setId(IdHelper.generateIdentity());
         accessToken.setAccessToken(token);
         accessToken.setUserId(userId);
-        accessToken.setUserName(user.getUsername());
-        accessToken.setClientId(dto.getClient_id());
+        accessToken.setUserName(username);
+        accessToken.setClientId(client.getClientId());
         accessToken.setExpiresIn(LocalDateTime.now().plusHours(expiresHour));
-        accessToken.setGrantType(dto.getGrant_type());
+        accessToken.setGrantType(grantType);
         accessToken.setScope(scope);
         accessToken.setCreateUser(userId);
         accessToken.setCreateTime(LocalDateTime.now());
         save(accessToken);
-        ResultMsg resultMsg = generateRefreshToken(accessToken.getId(), userId);
-        RspAccessToken response = new RspAccessToken(token,resultMsg.getData().toString(),expiresHour * 60 * 60);
-        return createResultMsg(response);
+        return createResultMsg(accessToken);
     }
 
     public ResultMsg generateRefreshToken(String tokenId, String userId) {
-        String token = "";
+        String token = IdHelper.generateIdentity();
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setId(IdHelper.generateIdentity());
         refreshToken.setTokenId(tokenId);
@@ -104,5 +121,45 @@ public class TokenService extends BaseService<AccessTokenMapper, AccessToken> im
         refreshToken.setCreateTime(LocalDateTime.now());
         refreshTokenMapper.insert(refreshToken);
         return createResultMsg(token);
+    }
+
+    public ResultMsg refreshToken(ReqRefreshToken req) {
+        if (req == null) return createErrorMsg(AppStatusCode.ParamsValidFail);
+        if (!req.getGrant_type().equals(AppEnums.GrantType.RefreshToken.getValue()))
+            return createErrorMsg(AppStatusCode.GrantTypeFail);
+
+        RefreshToken refreshToken = refreshTokenMapper.selectOne(new QueryWrapper<RefreshToken>()
+                .eq("refresh_token", req.getRefresh_token()));
+        if (refreshToken == null) return createErrorMsg(AppStatusCode.RefreshTokenNotFound);
+
+        LocalDateTime time = LocalDateTime.now();
+        Duration duration = Duration.between(refreshToken.getExpiresIn(), time);
+        if (duration.toMillis() <= 0) return createErrorMsg(AppStatusCode.RefreshTokenExpired);
+
+        ResultMsg resultMsg = clientService.getClient(req.getClient_id(), "");
+        if (!resultMsg.getSuccess()) return resultMsg;
+        Client client = (Client) resultMsg.getData();
+
+        AccessToken accessToken = getById(refreshToken.getTokenId());
+        if (accessToken == null) return createErrorMsg(AppStatusCode.RefreshTokenNotFound);
+
+        resultMsg = generateToken(accessToken.getUserId(), accessToken.getUserName(), client, accessToken.getGrantType(), accessToken.getScope());
+        if (!resultMsg.getSuccess()) return createErrorMsg(AppStatusCode.TokenFail);
+
+        RspAccessToken response = new RspAccessToken(accessToken.getAccessToken(), req.getRefresh_token(), expiresHour * 60 * 60);
+        return createResultMsg(response);
+    }
+
+    public ResultMsg checkToken(String token) {
+        if (!StringUtils.isNotBlank(token)) return createErrorMsg(AppStatusCode.ParamsValidFail);
+        AccessToken accessToken = getOne(new QueryWrapper<AccessToken>().eq("access_token", token));
+        if (accessToken == null) return createErrorMsg(AppStatusCode.TokenExpired);
+
+        LocalDateTime time = LocalDateTime.now();
+        Duration duration = Duration.between(time, accessToken.getExpiresIn());
+        if (duration.toMillis() <= 0) return createErrorMsg(AppStatusCode.TokenExpired);
+
+        ResultMsg resultMsg = clientService.getClient(accessToken.getClientId(), "");
+        return resultMsg;
     }
 }

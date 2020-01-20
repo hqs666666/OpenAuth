@@ -7,6 +7,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import pub.hqs.oauth.dto.ResultMsg;
 import pub.hqs.oauth.dto.token.ReqAccessToken;
+import pub.hqs.oauth.dto.token.ReqRefreshToken;
 import pub.hqs.oauth.entity.auth.ClientUser;
 import pub.hqs.oauth.service.token.ITokenService;
 
@@ -31,7 +32,19 @@ public class TokenController extends BaseController {
         if (!resultMsg.getSuccess()) return resultMsg;
         ClientUser clientUser = (ClientUser) resultMsg.getData();
 
-        resultMsg = tokenService.generateToken(userId, clientUser.getScope(), req);
+        resultMsg = tokenService.getAccessToken(userId, clientUser.getScope(), req);
+        return resultMsg;
+    }
+
+    @PostMapping("refresh-token")
+    public ResultMsg refreshToken(@Validated @RequestBody ReqRefreshToken req){
+        ResultMsg resultMsg = tokenService.refreshToken(req);
+        return resultMsg;
+    }
+
+    @GetMapping("check")
+    public ResultMsg check(String token){
+        ResultMsg resultMsg = tokenService.checkToken(token);
         return resultMsg;
     }
 }

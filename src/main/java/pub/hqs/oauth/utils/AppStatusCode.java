@@ -15,6 +15,9 @@ public enum AppStatusCode {
     CodeIsUsed("code已经被使用了", 10009),
     UserNotAuthorize("该用户还未获得授权", 10010),
     TokenFail("获取token失败", 10011),
+    TokenExpired("token已过期",10012),
+    RefreshTokenNotFound("refresh_token不存在",10013),
+    RefreshTokenExpired("refresh_token已过期",10014),
     UserValidFail("用户验证失败", 20001),
     ParamsValidFail("参数验证失败", 20002);
 
