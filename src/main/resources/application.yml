@@ -23,8 +23,9 @@ spring:
 
   redis:
     database: 7
-    host: localhost
-    port: 6379
+    host: hqs.pub
+    port: 6380
+    password: redis123456aB
 
 custom:
   access-token:
