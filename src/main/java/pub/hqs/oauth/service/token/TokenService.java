@@ -65,7 +65,7 @@ public class TokenService extends BaseService<AccessTokenMapper, AccessToken> im
         if (authCode.getStatus() == 1) return createErrorMsg(AppStatusCode.CodeIsUsed);
 
         LocalDateTime time = LocalDateTime.now();
-        Duration duration = Duration.between(authCode.getExpiresIn(), time);
+        Duration duration = Duration.between(time, authCode.getExpiresIn());
         if (duration.toMillis() <= 0) return createErrorMsg(AppStatusCode.CodeExpired);
 
         authCode.setStatus(1);
@@ -133,7 +133,7 @@ public class TokenService extends BaseService<AccessTokenMapper, AccessToken> im
         if (refreshToken == null) return createErrorMsg(AppStatusCode.RefreshTokenNotFound);
 
         LocalDateTime time = LocalDateTime.now();
-        Duration duration = Duration.between(refreshToken.getExpiresIn(), time);
+        Duration duration = Duration.between(time, refreshToken.getExpiresIn());
         if (duration.toMillis() <= 0) return createErrorMsg(AppStatusCode.RefreshTokenExpired);
 
         ResultMsg resultMsg = clientService.getClient(req.getClient_id(), "");
