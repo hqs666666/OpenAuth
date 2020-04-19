@@ -18,4 +18,6 @@ public class AccountController extends BaseController {
     public ResultMsg userInfo(@RequestHeader(value = "token",defaultValue = "1") String token){
         return createResultMsg(token);
     }
+
+
 }
