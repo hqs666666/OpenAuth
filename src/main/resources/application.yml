@@ -31,7 +31,7 @@ custom:
   access-token:
     expires-hour: 2
   refresh-token:
-    expires-day: 1
+    expires-day: 7
 
 mybatis-plus:
   configuration:

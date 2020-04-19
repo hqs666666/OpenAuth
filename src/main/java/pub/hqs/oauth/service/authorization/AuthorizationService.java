@@ -71,7 +71,7 @@ public class AuthorizationService extends BaseService<ClientMapper, Client> impl
         entity.setCode(code);
         entity.setClientId(dto.getClient_id());
         entity.setCreateTime(LocalDateTime.now());
-        entity.setExpiresIn(LocalDateTime.now());
+        entity.setExpiresIn(LocalDateTime.now().plusMinutes(10));
         entity.setUserId(userId);
         authCodeMapper.insert(entity);
 
