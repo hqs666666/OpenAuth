@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import pub.hqs.oauth.dto.ResultMsg;
 import pub.hqs.oauth.utils.AppStatusCode;
+import pub.hqs.oauth.utils.CustomException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -51,6 +52,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = Exception.class)
     public ResultMsg handleException(Exception ex) {
+        return createErrorMsg(AppStatusCode.Fail, ex.getMessage());
+    }
+
+    @ExceptionHandler(value = CustomException.class)
+    public ResultMsg handleException(CustomException ex) {
         return createErrorMsg(AppStatusCode.Fail, ex.getMessage());
     }
 }

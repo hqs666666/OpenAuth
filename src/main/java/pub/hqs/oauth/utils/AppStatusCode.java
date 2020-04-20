@@ -19,7 +19,11 @@ public enum AppStatusCode {
     RefreshTokenNotFound("refresh_token不存在",10013),
     RefreshTokenExpired("refresh_token已过期",10014),
     UserValidFail("用户验证失败", 20001),
-    ParamsValidFail("参数验证失败", 20002);
+    ParamsValidFail("参数验证失败", 20002),
+    WeChatCodeFail("code失效",20003),
+    AddWeChatUserFail("添加用户失败",20004),
+    UnAuthorization("请先登录",20004),
+    SystemBoom("系统爆炸",99999);
 
     private int code;
     private String value;

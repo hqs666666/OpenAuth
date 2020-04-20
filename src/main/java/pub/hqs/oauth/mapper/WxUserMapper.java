@@ -2,8 +2,8 @@ package pub.hqs.oauth.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.springframework.stereotype.Repository;
-import pub.hqs.oauth.entity.user.User;
+import pub.hqs.oauth.entity.user.WxUser;
 
 @Repository
-public interface UserMapper extends BaseMapper<User> {
+public interface WxUserMapper extends BaseMapper<WxUser> {
 }

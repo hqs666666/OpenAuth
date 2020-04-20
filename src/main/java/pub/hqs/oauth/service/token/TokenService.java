@@ -82,45 +82,8 @@ public class TokenService extends BaseService<AccessTokenMapper, AccessToken> im
         if (!resultMsg.getSuccess()) return resultMsg;
         Client client = (Client) resultMsg.getData();
 
-        resultMsg = generateToken(userId, user.getUsername(), client, dto.getGrant_type(), scope);
-        if (!resultMsg.getSuccess()) return createErrorMsg(AppStatusCode.TokenFail);
-        AccessToken accessToken = (AccessToken) resultMsg.getData();
-
-        resultMsg = generateRefreshToken(accessToken.getId(), userId);
-        if (!resultMsg.getSuccess()) return createErrorMsg(AppStatusCode.TokenFail);
-
-        RspAccessToken response = new RspAccessToken(accessToken.getAccessToken(), resultMsg.getData().toString(), expiresHour * 60 * 60);
-        return createResultMsg(response);
-    }
-
-    public ResultMsg generateToken(String userId, String username, Client client, String grantType, String scope) {
-        String token = TokenUtils.generate(client.getClientName(), client.getClientSecret(), userId);
-        AccessToken accessToken = new AccessToken();
-        accessToken.setId(IdHelper.generateIdentity());
-        accessToken.setAccessToken(token);
-        accessToken.setUserId(userId);
-        accessToken.setUserName(username);
-        accessToken.setClientId(client.getClientId());
-        accessToken.setExpiresIn(LocalDateTime.now().plusHours(expiresHour));
-        accessToken.setGrantType(grantType);
-        accessToken.setScope(scope);
-        accessToken.setCreateUser(userId);
-        accessToken.setCreateTime(LocalDateTime.now());
-        save(accessToken);
-        return createResultMsg(accessToken);
-    }
-
-    public ResultMsg generateRefreshToken(String tokenId, String userId) {
-        String token = IdHelper.generateIdentity();
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setId(IdHelper.generateIdentity());
-        refreshToken.setTokenId(tokenId);
-        refreshToken.setRefreshToken(token);
-        refreshToken.setExpiresIn(LocalDateTime.now().plusDays(expiresDay));
-        refreshToken.setCreateUser(userId);
-        refreshToken.setCreateTime(LocalDateTime.now());
-        refreshTokenMapper.insert(refreshToken);
-        return createResultMsg(token);
+        resultMsg = getTokenBag(userId, user.getUsername(), client, dto.getGrant_type(), scope);
+        return resultMsg;
     }
 
     public ResultMsg refreshToken(ReqRefreshToken req) {
@@ -161,5 +124,47 @@ public class TokenService extends BaseService<AccessTokenMapper, AccessToken> im
 
         ResultMsg resultMsg = clientService.getClient(accessToken.getClientId(), "");
         return resultMsg;
+    }
+
+    public ResultMsg getTokenBag(String userId, String name, Client client, String grantType, String scope){
+        ResultMsg resultMsg = generateToken(userId, name, client, grantType, scope);
+        if (!resultMsg.getSuccess()) return createErrorMsg(AppStatusCode.TokenFail);
+        AccessToken accessToken = (AccessToken) resultMsg.getData();
+
+        resultMsg = generateRefreshToken(accessToken.getId(), userId);
+        if (!resultMsg.getSuccess()) return createErrorMsg(AppStatusCode.TokenFail);
+
+        RspAccessToken response = new RspAccessToken(accessToken.getAccessToken(), resultMsg.getData().toString(), expiresHour * 60 * 60);
+        return createResultMsg(response);
+    }
+
+    private ResultMsg generateToken(String userId, String username, Client client, String grantType, String scope) {
+        String token = TokenUtils.generate(client.getClientName(), client.getClientSecret(), userId);
+        AccessToken accessToken = new AccessToken();
+        accessToken.setId(IdHelper.generateIdentity());
+        accessToken.setAccessToken(token);
+        accessToken.setUserId(userId);
+        accessToken.setUserName(username);
+        accessToken.setClientId(client.getClientId());
+        accessToken.setExpiresIn(LocalDateTime.now().plusHours(expiresHour));
+        accessToken.setGrantType(grantType);
+        accessToken.setScope(scope);
+        accessToken.setCreateUser(userId);
+        accessToken.setCreateTime(LocalDateTime.now());
+        save(accessToken);
+        return createResultMsg(accessToken);
+    }
+
+    private ResultMsg generateRefreshToken(String tokenId, String userId) {
+        String token = IdHelper.generateIdentity();
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setId(IdHelper.generateIdentity());
+        refreshToken.setTokenId(tokenId);
+        refreshToken.setRefreshToken(token);
+        refreshToken.setExpiresIn(LocalDateTime.now().plusDays(expiresDay));
+        refreshToken.setCreateUser(userId);
+        refreshToken.setCreateTime(LocalDateTime.now());
+        refreshTokenMapper.insert(refreshToken);
+        return createResultMsg(token);
     }
 }

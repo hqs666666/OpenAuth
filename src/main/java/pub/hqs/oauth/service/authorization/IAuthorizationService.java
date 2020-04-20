@@ -1,6 +1,6 @@
 package pub.hqs.oauth.service.authorization;
 
-import pub.hqs.oauth.dto.AuthorizationInfo;
+import pub.hqs.oauth.dto.client.AuthorizationInfo;
 import pub.hqs.oauth.dto.ResultMsg;
 import pub.hqs.oauth.entity.auth.Client;
 import pub.hqs.oauth.service.IBaseService;

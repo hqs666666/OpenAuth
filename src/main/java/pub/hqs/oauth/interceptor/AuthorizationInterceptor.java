@@ -1,57 +1,42 @@
 package pub.hqs.oauth.interceptor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
-import pub.hqs.oauth.annotation.Anonymous;
 import pub.hqs.oauth.annotation.Authorize;
 import pub.hqs.oauth.dto.ResultMsg;
-import pub.hqs.oauth.dto.user.UserDto;
-import pub.hqs.oauth.service.cache.ICacheService;
-import pub.hqs.oauth.utils.AppConstants;
+import pub.hqs.oauth.service.token.ITokenService;
 import pub.hqs.oauth.utils.AppStatusCode;
 
-import javax.servlet.http.Cookie;
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.util.Arrays;
-import java.util.List;
 
-import static java.util.stream.Collectors.toList;
-
-/*
- * 验证登录
- * */
 @Component
-public class LoginInterceptor extends HandlerInterceptorAdapter {
+public class AuthorizationInterceptor extends HandlerInterceptorAdapter {
 
-    @Autowired
-    private ICacheService cacheService;
+    @Resource
+    private ITokenService tokenService;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception{
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
+
         HandlerMethod handlerMethod = (HandlerMethod) handler;
         Class className = handlerMethod.getBeanType();
         boolean hasAuthorize = className.isAnnotationPresent(Authorize.class) || handlerMethod.getMethod().isAnnotationPresent(Authorize.class);
-        if (hasAuthorize) return true;
+        if(!hasAuthorize) return true;
 
-        HttpSession session = request.getSession();
-        UserDto user = (UserDto) session.getAttribute(AppConstants.SESSION_NAME);
-        if (user != null) return true;
-
-        List<Cookie> cookies = Arrays.stream(request.getCookies()).filter(p -> p.getName().equals(AppConstants.SESSION_NAME)).collect(toList());
-        if (cookies != null && cookies.size() > 0) {
-            String cookie = cookies.get(0).getValue();
-            UserDto userDto = cacheService.get(cookie);
-            setSession(request, userDto);
-            if (userDto != null) return true;
+        String token = request.getHeader("Authorization");
+        if(StringUtils.isNotBlank(token)){
+            token = token.substring(7);
+            ResultMsg resultMsg = tokenService.checkToken(token);
+            if(resultMsg.getSuccess()) return true;
         }
 
         responseErrorMsg(response);
@@ -68,13 +53,8 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
                                 Object o, Exception e) throws Exception {
     }
 
-    private void setSession(HttpServletRequest request, UserDto userDto) {
-        HttpSession session = request.getSession();
-        session.setAttribute(AppConstants.SESSION_NAME, userDto);
-    }
-
     private void responseErrorMsg(HttpServletResponse response) throws Exception {
-        ResultMsg resultMsg = new ResultMsg().createErrorMsg(AppStatusCode.Fail, "please login");
+        ResultMsg resultMsg = new ResultMsg().createErrorMsg(AppStatusCode.UnAuthorization, AppStatusCode.UnAuthorization.getValue());
         ObjectMapper mapper = new ObjectMapper();
         String json = mapper.writeValueAsString(resultMsg);
         response.setHeader("Content-Type", "application/json");

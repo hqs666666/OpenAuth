@@ -42,7 +42,7 @@ public class TokenController extends BaseController {
         return resultMsg;
     }
 
-    @GetMapping("check")
+    @GetMapping("check-token")
     public ResultMsg check(String token){
         ResultMsg resultMsg = tokenService.checkToken(token);
         return resultMsg;

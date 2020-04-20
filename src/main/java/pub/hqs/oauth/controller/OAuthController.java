@@ -7,11 +7,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import pub.hqs.oauth.annotation.Authorize;
-import pub.hqs.oauth.dto.AuthorizationInfo;
+import pub.hqs.oauth.dto.client.AuthorizationInfo;
 import pub.hqs.oauth.dto.ResultMsg;
-import pub.hqs.oauth.dto.UserDto;
-import pub.hqs.oauth.dto.UserLogin;
+import pub.hqs.oauth.dto.user.UserDto;
+import pub.hqs.oauth.dto.user.UserLogin;
 import pub.hqs.oauth.service.authorization.IAuthorizationService;
 import pub.hqs.oauth.service.user.IUserService;
 import pub.hqs.oauth.utils.AppConstants;
@@ -36,7 +35,7 @@ public class OAuthController extends BaseController {
     public String authorize(@Validated AuthorizationInfo dto, @CookieValue(value = AppConstants.SESSION_NAME,defaultValue = "-1") String cookie, Model model) {
         ResultMsg resultMsg = authorizationService.validClient(dto);
         if (resultMsg.getSuccess()) {
-            UserDto user = userService.getUserInfo(cookie);
+            UserDto user = userService.getUser(cookie);
             if (user != null) {
                 Boolean hasAuth = authorizationService.hasAuthorizeClient(user.getId(), dto.getClient_id());
                 if (hasAuth) {
@@ -64,7 +63,6 @@ public class OAuthController extends BaseController {
         return resultMsg;
     }
 
-    @Authorize
     @ResponseBody
     @PostMapping("agree")
     public ResultMsg agree(@Validated @RequestBody AuthorizationInfo dto, HttpServletRequest request) {

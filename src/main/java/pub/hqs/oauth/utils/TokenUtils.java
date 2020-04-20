@@ -7,7 +7,7 @@ import java.util.Date;
 
 public class TokenUtils {
 
-    public static String generate(String clientName, String secret,String userId) {
+    public static String generate(String clientName, String secret, String userId) {
         // 给定一个算法，如HmacSHA-256
         Algorithm alg = Algorithm.HMAC256(secret);
 
@@ -24,4 +24,5 @@ public class TokenUtils {
                 .sign(alg);
         return token;
     }
+
 }

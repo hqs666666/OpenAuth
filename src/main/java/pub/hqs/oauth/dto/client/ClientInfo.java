@@ -1,4 +1,4 @@
-package pub.hqs.oauth.dto;
+package pub.hqs.oauth.dto.client;
 
 import lombok.Data;
 
