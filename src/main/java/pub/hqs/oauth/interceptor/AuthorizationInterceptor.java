@@ -8,8 +8,12 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import pub.hqs.oauth.annotation.Authorize;
 import pub.hqs.oauth.dto.ResultMsg;
+import pub.hqs.oauth.dto.user.CurrentUser;
+import pub.hqs.oauth.dto.user.UserContext;
 import pub.hqs.oauth.service.token.ITokenService;
+import pub.hqs.oauth.utils.AppConstants;
 import pub.hqs.oauth.utils.AppStatusCode;
+import pub.hqs.oauth.utils.TokenUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -36,7 +40,11 @@ public class AuthorizationInterceptor extends HandlerInterceptorAdapter {
         if(StringUtils.isNotBlank(token)){
             token = token.substring(7);
             ResultMsg resultMsg = tokenService.checkToken(token);
-            if(resultMsg.getSuccess()) return true;
+            if(resultMsg.getSuccess()) {
+                String userId = TokenUtils.getClaim(token, AppConstants.USER_ID_CLAIM);
+                UserContext userContext= new UserContext(new CurrentUser(userId,"",""));
+            };
+            return true;
         }
 
         responseErrorMsg(response);

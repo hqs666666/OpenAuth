@@ -2,6 +2,8 @@ package pub.hqs.oauth.utils;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 
 import java.util.Date;
 
@@ -25,4 +27,12 @@ public class TokenUtils {
         return token;
     }
 
+    public static String getClaim(String token,String claim) {
+        try {
+            DecodedJWT jwt = JWT.decode(token);
+            return jwt.getClaim(claim).asString();
+        } catch (JWTDecodeException e) {
+            return null;
+        }
+    }
 }

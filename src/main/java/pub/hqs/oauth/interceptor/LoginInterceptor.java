@@ -42,6 +42,9 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
         boolean hasAuthorize = className.isAnnotationPresent(Authorize.class) || handlerMethod.getMethod().isAnnotationPresent(Authorize.class);
         if (hasAuthorize) return true;
 
+        boolean hacAnonymous = className.isAnnotationPresent(Anonymous.class) || handlerMethod.getMethod().isAnnotationPresent(Anonymous.class);
+        if (hacAnonymous) return true;
+
         HttpSession session = request.getSession();
         UserDto user = (UserDto) session.getAttribute(AppConstants.SESSION_NAME);
         if (user != null) return true;

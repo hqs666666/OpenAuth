@@ -75,6 +75,6 @@ public class UserService extends BaseService<UserMapper, User> implements IUserS
         user.setCreateTime(LocalDateTime.now());
         result = userInfoMapper.insert(userInfo) > 0;
         if(!result) return createErrorMsg(AppStatusCode.AddWeChatUserFail);
-        return createResultMsg(user);
+        return createResultMsg(userInfo);
     }
 }

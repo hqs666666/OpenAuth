@@ -11,6 +11,7 @@ import pub.hqs.oauth.dto.token.ReqRefreshToken;
 import pub.hqs.oauth.dto.token.RspAccessToken;
 import pub.hqs.oauth.entity.auth.*;
 import pub.hqs.oauth.entity.user.User;
+import pub.hqs.oauth.entity.user.UserInfo;
 import pub.hqs.oauth.mapper.*;
 import pub.hqs.oauth.service.BaseService;
 import pub.hqs.oauth.service.client.IClientService;
@@ -75,14 +76,15 @@ public class TokenService extends BaseService<AccessTokenMapper, AccessToken> im
 
     @Transactional
     public ResultMsg getAccessToken(String userId, String scope, ReqAccessToken dto) {
-        User user = userService.getById(userId);
-        if (user == null) return createErrorMsg(AppStatusCode.UserValidFail);
+        ResultMsg resultMsg = userService.getUserInfo(userId);
+        if (!resultMsg.getSuccess()) return resultMsg;
+        UserInfo user = (UserInfo) resultMsg.getData();
 
-        ResultMsg resultMsg = clientService.getClient(dto.getClient_id(), "");
+        resultMsg = clientService.getClient(dto.getClient_id(), "");
         if (!resultMsg.getSuccess()) return resultMsg;
         Client client = (Client) resultMsg.getData();
 
-        resultMsg = getTokenBag(userId, user.getUsername(), client, dto.getGrant_type(), scope);
+        resultMsg = getTokenBag(userId, user.getNickname(), client, dto.getGrant_type(), scope);
         return resultMsg;
     }
 

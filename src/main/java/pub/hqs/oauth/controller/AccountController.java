@@ -3,7 +3,6 @@ package pub.hqs.oauth.controller;
 import io.swagger.annotations.Api;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pub.hqs.oauth.annotation.Authorize;
@@ -23,6 +22,7 @@ public class AccountController extends BaseController {
 
     @GetMapping("userinfo")
     public ResultMsg userInfo(){
-        return createResultMsg("qwe");
+        ResultMsg resultMsg = userService.getUserInfo(getUserId());
+        return resultMsg;
     }
 }

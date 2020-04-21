@@ -8,6 +8,7 @@ import pub.hqs.oauth.dto.wxopen.ReqCode2Session;
 import pub.hqs.oauth.dto.wxopen.SessionBag;
 import pub.hqs.oauth.entity.auth.Client;
 import pub.hqs.oauth.entity.user.User;
+import pub.hqs.oauth.entity.user.UserInfo;
 import pub.hqs.oauth.entity.user.WxUser;
 import pub.hqs.oauth.mapper.WxUserMapper;
 import pub.hqs.oauth.service.BaseService;
@@ -57,9 +58,10 @@ public class WxOpenService extends BaseService<WxUserMapper, WxUser> implements 
     }
 
     private ResultMsg existUser(String userId, Client client){
-        User user = userService.getById(userId);
-        if(user == null) return createErrorMsg(AppStatusCode.UserValidFail);
-        ResultMsg resultMsg = tokenService.getTokenBag(user.getId(),user.getUsername(),client,AppEnums.GrantType.WxOpen.getValue(),"userinfo");
+        ResultMsg resultMsg = userService.getUserInfo(userId);
+        if(!resultMsg.getSuccess()) return resultMsg;
+        UserInfo user = (UserInfo) resultMsg.getData();
+        resultMsg = tokenService.getTokenBag(user.getId(),user.getNickname(),client,AppEnums.GrantType.WxOpen.getValue(),"userinfo");
         return resultMsg;
     }
 
@@ -67,7 +69,7 @@ public class WxOpenService extends BaseService<WxUserMapper, WxUser> implements 
         if(info == null) return createErrorMsg(AppStatusCode.UserValidFail);
         ResultMsg resultMsg = userService.addUserByWx(info);
         if(!resultMsg.getSuccess()) return createErrorMsg(AppStatusCode.AddWeChatUserFail);
-        User user = (User) resultMsg.getData();
+        UserInfo user = (UserInfo) resultMsg.getData();
 
         info.setId(IdHelper.generateIdentity());
         info.setCreateTime(LocalDateTime.now());
@@ -75,7 +77,7 @@ public class WxOpenService extends BaseService<WxUserMapper, WxUser> implements 
         Boolean result = save(info);
         if(!result) return createErrorMsg(AppStatusCode.AddWeChatUserFail);
 
-        resultMsg = tokenService.getTokenBag(user.getId(),user.getUsername(),client,AppEnums.GrantType.WxOpen.getValue(),"userinfo");
+        resultMsg = tokenService.getTokenBag(user.getId(),user.getNickname(),client,AppEnums.GrantType.WxOpen.getValue(),"userinfo");
         return resultMsg;
     }
 

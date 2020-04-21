@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import pub.hqs.oauth.annotation.Anonymous;
 import pub.hqs.oauth.dto.ResultMsg;
 import pub.hqs.oauth.dto.token.ReqAccessToken;
 import pub.hqs.oauth.dto.token.ReqRefreshToken;
@@ -12,6 +13,7 @@ import pub.hqs.oauth.entity.auth.ClientUser;
 import pub.hqs.oauth.service.token.ITokenService;
 
 @Api(tags = "token相关")
+@Anonymous
 @RestController
 @RequestMapping(value = "/oauth2", produces = MediaType.APPLICATION_JSON_VALUE)
 public class TokenController extends BaseController {
