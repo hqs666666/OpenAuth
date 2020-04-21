@@ -52,9 +52,23 @@ public class WxOpenService extends BaseService<WxUserMapper, WxUser> implements 
         if(wxUser != null){
             resultMsg = existUser(wxUser.getUserId(), client);
         }else{
-            resultMsg = notExistUser(dto.getUserInfo(), client);
+            WxUser user = setWxUser(dto, bag.getOpenId());
+            resultMsg = notExistUser(user, client);
         }
         return resultMsg;
+    }
+
+    private WxUser setWxUser(ReqCode2Session dto, String openId){
+        WxUser user = new WxUser();
+        user.setOpenId(openId);
+        user.setNickName(dto.getNickName());
+        user.setAvatarUrl(dto.getAvatarUrl());
+        user.setCity(dto.getCity());
+        user.setCountry(dto.getCountry());
+        user.setProvince(dto.getProvince());
+        user.setGender(dto.getGender());
+        user.setUnionId(dto.getUnionId());
+        return user;
     }
 
     private ResultMsg existUser(String userId, Client client){
@@ -90,14 +104,17 @@ public class WxOpenService extends BaseService<WxUserMapper, WxUser> implements 
     private ResultMsg getWxInfoByCode(String code){
         String url = "https://api.weixin.qq.com/sns/jscode2session?appid="+ appSetting.appId+"&secret="+appSetting.secret+"&js_code="+code+"&grant_type=authorization_code";
         HashMap result = HttpHelper.get(url);
-        if(!result.get("errcode").toString().equals("0"))
+        if(!result.containsKey("openid")){
             return createErrorMsg(AppStatusCode.WeChatCodeFail);
+        }
 
         SessionBag bag = new SessionBag();
         bag.setOpenId(result.get("openid").toString());
         bag.setSessionKey(result.get("session_key").toString());
-        bag.setUnionId(result.get("unionid").toString());
-        cacheService.set("openId-"+bag.getOpenId(),bag,60*60*2);
+        if(result.containsKey("unionid")){
+            bag.setUnionId(result.get("unionid").toString());
+        }
+        //cacheService.set("openId-"+bag.getOpenId(),bag,60*60*2);
 
         return createResultMsg(bag);
     }

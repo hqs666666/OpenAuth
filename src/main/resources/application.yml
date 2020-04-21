@@ -4,7 +4,7 @@ server:
 spring:
   datasource:
     druid:
-      url: jdbc:mysql://10.110.74.20:3306/oauthdb?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=CTT
+      url: jdbc:mysql://t.cn:3306/oauthdb?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=CTT
       username: root
       password: 123456
       initial-size: 1
@@ -23,19 +23,9 @@ spring:
 
   redis:
     database: 7
-    host: 10.110.74.29
-    port: 6379
+    host: t.cn
+    port: 6381
     password: redis123456aB
-
-  jackson:
-    # 设置属性命名策略,对应jackson下PropertyNamingStrategy中的常量值，SNAKE_CASE-返回的json驼峰式转下划线，json body下划线传到后端自动转驼峰式
-    property-naming-strategy: SNAKE_CASE
-    # 全局设置@JsonFormat的格式pattern
-    date-format: yyyy-MM-dd HH:mm:ss
-    # 当地时区
-    locale: zh
-    # 设置全局时区
-    time-zone: GMT+8
 
 custom:
   access-token:

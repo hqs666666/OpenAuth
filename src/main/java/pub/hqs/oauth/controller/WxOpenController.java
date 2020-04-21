@@ -10,10 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pub.hqs.oauth.annotation.Anonymous;
 import pub.hqs.oauth.dto.ResultMsg;
 import pub.hqs.oauth.dto.wxopen.ReqCode2Session;
-import pub.hqs.oauth.service.client.IClientService;
 import pub.hqs.oauth.service.wxopen.IWxOpenService;
-import pub.hqs.oauth.utils.AppEnums;
-import pub.hqs.oauth.utils.AppStatusCode;
 
 @Api(tags = "微信相关")
 @Anonymous
