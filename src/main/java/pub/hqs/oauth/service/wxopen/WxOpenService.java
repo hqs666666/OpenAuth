@@ -75,9 +75,13 @@ public class WxOpenService extends BaseService<WxUserMapper, WxUser> implements 
         UserLogin loginDto = new UserLogin(dto.getUsername(),dto.getPassword());
         resultMsg = userService.validUser(loginDto);
         if(!resultMsg.getSuccess()) return resultMsg;
-        UserDto userDto = (UserDto) resultMsg.getData();
 
-        resultMsg = tokenService.getTokenBag(userDto.getId(), userDto.getUserName(), client,AppEnums.GrantType.WxOpen.getValue(),"userinfo");
+        String userId = resultMsg.getData().toString();
+        resultMsg = userService.getUserInfo(userId);
+        if(!resultMsg.getSuccess()) return resultMsg;
+        UserInfo userInfo = (UserInfo)resultMsg.getData();
+
+        resultMsg = tokenService.getTokenBag(userInfo.getId(), userInfo.getNickname(), client,AppEnums.GrantType.WxOpen.getValue(),"userinfo");
         return resultMsg;
     }
 
