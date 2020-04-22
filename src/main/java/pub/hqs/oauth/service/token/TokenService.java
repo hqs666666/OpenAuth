@@ -101,7 +101,7 @@ public class TokenService extends BaseService<AccessTokenMapper, AccessToken> im
         Duration duration = Duration.between(time, refreshToken.getExpiresIn());
         if (duration.toMillis() <= 0) return createErrorMsg(AppStatusCode.RefreshTokenExpired);
 
-        ResultMsg resultMsg = clientService.getClient(req.getClient_id(), "");
+        ResultMsg resultMsg = clientService.getClient(req.getClient_id(), req.getClient_secret());
         if (!resultMsg.getSuccess()) return resultMsg;
         Client client = (Client) resultMsg.getData();
 
@@ -124,8 +124,7 @@ public class TokenService extends BaseService<AccessTokenMapper, AccessToken> im
         Duration duration = Duration.between(time, accessToken.getExpiresIn());
         if (duration.toMillis() <= 0) return createErrorMsg(AppStatusCode.TokenExpired);
 
-        ResultMsg resultMsg = clientService.getClient(accessToken.getClientId(), "");
-        return resultMsg;
+        return createResultMsg();
     }
 
     public ResultMsg getTokenBag(String userId, String name, Client client, String grantType, String scope){

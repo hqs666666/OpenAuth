@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import pub.hqs.oauth.annotation.Anonymous;
 import pub.hqs.oauth.dto.ResultMsg;
 import pub.hqs.oauth.dto.wxopen.ReqCode2Session;
+import pub.hqs.oauth.dto.wxopen.ReqLogin;
 import pub.hqs.oauth.service.wxopen.IWxOpenService;
 
 @Api(tags = "微信相关")
@@ -24,6 +25,12 @@ public class WxOpenController extends BaseController {
     @PostMapping("/code2session")
     public ResultMsg code2session(@Validated  @RequestBody ReqCode2Session dto){
         ResultMsg resultMsg = wxOpenService.wechatLogin(dto);
+        return resultMsg;
+    }
+
+    @PostMapping("login")
+    public ResultMsg login(@Validated  @RequestBody ReqLogin dto){
+        ResultMsg resultMsg = wxOpenService.login(dto);
         return resultMsg;
     }
 }

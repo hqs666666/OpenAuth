@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pub.hqs.oauth.dto.ResultMsg;
+import pub.hqs.oauth.dto.user.UserDto;
+import pub.hqs.oauth.dto.user.UserLogin;
 import pub.hqs.oauth.dto.wxopen.ReqCode2Session;
+import pub.hqs.oauth.dto.wxopen.ReqLogin;
 import pub.hqs.oauth.dto.wxopen.SessionBag;
 import pub.hqs.oauth.entity.auth.Client;
-import pub.hqs.oauth.entity.user.User;
 import pub.hqs.oauth.entity.user.UserInfo;
 import pub.hqs.oauth.entity.user.WxUser;
 import pub.hqs.oauth.mapper.WxUserMapper;
@@ -39,10 +41,12 @@ public class WxOpenService extends BaseService<WxUserMapper, WxUser> implements 
     public ResultMsg wechatLogin(ReqCode2Session dto){
         ResultMsg resultMsg = clientService.getClient(dto.getClient_id(),dto.getClient_secret());
         if(!resultMsg.getSuccess()) return resultMsg;
-        Client client = (Client)resultMsg.getData();
 
         if(!dto.getGrant_type().equals(AppEnums.GrantType.WxOpen.getValue()))
             return createErrorMsg(AppStatusCode.GrantTypeFail);
+
+        if(!resultMsg.getSuccess()) return resultMsg;
+        Client client = (Client)resultMsg.getData();
 
         resultMsg = getWxInfoByCode(dto.getCode());
         if(!resultMsg.getSuccess()) return resultMsg;
@@ -55,6 +59,25 @@ public class WxOpenService extends BaseService<WxUserMapper, WxUser> implements 
             WxUser user = setWxUser(dto, bag.getOpenId());
             resultMsg = notExistUser(user, client);
         }
+        return resultMsg;
+    }
+
+    public ResultMsg login(ReqLogin dto){
+        ResultMsg resultMsg = clientService.getClient(dto.getClient_id(),dto.getClient_secret());
+        if(!resultMsg.getSuccess()) return resultMsg;
+
+        if(!dto.getGrant_type().equals(AppEnums.GrantType.Password.getValue()))
+            return createErrorMsg(AppStatusCode.GrantTypeFail);
+
+        if(!resultMsg.getSuccess()) return resultMsg;
+        Client client = (Client)resultMsg.getData();
+
+        UserLogin loginDto = new UserLogin(dto.getUsername(),dto.getPassword());
+        resultMsg = userService.validUser(loginDto);
+        if(!resultMsg.getSuccess()) return resultMsg;
+        UserDto userDto = (UserDto) resultMsg.getData();
+
+        resultMsg = tokenService.getTokenBag(userDto.getId(), userDto.getUserName(), client,AppEnums.GrantType.WxOpen.getValue(),"userinfo");
         return resultMsg;
     }
 

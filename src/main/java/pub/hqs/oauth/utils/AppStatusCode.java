@@ -23,6 +23,7 @@ public enum AppStatusCode {
     WeChatCodeFail("code失效",20003),
     AddWeChatUserFail("添加用户失败",20004),
     UnAuthorization("请先登录",20004),
+    BindWxFail("绑定微信失败",20005),
     SystemBoom("系统爆炸",99999);
 
     private int code;

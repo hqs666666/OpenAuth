@@ -8,6 +8,8 @@ import javax.validation.constraints.NotBlank;
 public class ReqRefreshToken {
     @NotBlank(message = "client_id不能为空")
     private String client_id;
+    @NotBlank(message = "client_secret不能为空")
+    private String client_secret;
     @NotBlank(message = "grant_type不能为空")
     private String grant_type;
     @NotBlank(message = "refresh_token不能为空")
