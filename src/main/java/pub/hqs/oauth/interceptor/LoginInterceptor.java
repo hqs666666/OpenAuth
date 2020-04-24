@@ -8,6 +8,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import pub.hqs.oauth.annotation.Anonymous;
 import pub.hqs.oauth.annotation.Authorize;
+import pub.hqs.oauth.annotation.Login;
 import pub.hqs.oauth.dto.ResultMsg;
 import pub.hqs.oauth.dto.user.UserDto;
 import pub.hqs.oauth.service.cache.ICacheService;
@@ -39,26 +40,22 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
         }
         HandlerMethod handlerMethod = (HandlerMethod) handler;
         Class className = handlerMethod.getBeanType();
-        boolean hasAuthorize = className.isAnnotationPresent(Authorize.class) || handlerMethod.getMethod().isAnnotationPresent(Authorize.class);
-        if (hasAuthorize) return true;
+        boolean hasAttr = className.isAnnotationPresent(Login.class) || handlerMethod.getMethod().isAnnotationPresent(Login.class);
 
-        boolean hacAnonymous = className.isAnnotationPresent(Anonymous.class) || handlerMethod.getMethod().isAnnotationPresent(Anonymous.class);
-        if (hacAnonymous) return true;
+        if(hasAttr){
+            HttpSession session = request.getSession();
+            UserDto user = (UserDto) session.getAttribute(AppConstants.SESSION_NAME);
+            if (user != null) return true;
 
-        HttpSession session = request.getSession();
-        UserDto user = (UserDto) session.getAttribute(AppConstants.SESSION_NAME);
-        if (user != null) return true;
-
-        List<Cookie> cookies = Arrays.stream(request.getCookies()).filter(p -> p.getName().equals(AppConstants.SESSION_NAME)).collect(toList());
-        if (cookies != null && cookies.size() > 0) {
-            String cookie = cookies.get(0).getValue();
-            UserDto userDto = cacheService.get(cookie);
-            setSession(request, userDto);
-            if (userDto != null) return true;
+            List<Cookie> cookies = Arrays.stream(request.getCookies()).filter(p -> p.getName().equals(AppConstants.SESSION_NAME)).collect(toList());
+            if (cookies != null && cookies.size() > 0) {
+                String cookie = cookies.get(0).getValue();
+                UserDto userDto = cacheService.get(cookie);
+                setSession(request, userDto);
+                if (userDto != null) return true;
+            }
         }
-
-        responseErrorMsg(response);
-        return false;
+        return true;
     }
 
     @Override

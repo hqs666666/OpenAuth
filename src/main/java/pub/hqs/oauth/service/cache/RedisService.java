@@ -35,6 +35,11 @@ public class RedisService implements ICacheService {
             e.printStackTrace();
             return null;
         }
+    }
 
+    public void remove(String key){
+        if (redisTemplate.hasKey(key)){
+            redisTemplate.delete(key);
+        }
     }
 }

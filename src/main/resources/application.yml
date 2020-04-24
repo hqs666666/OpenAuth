@@ -4,7 +4,7 @@ server:
 spring:
   datasource:
     druid:
-      url: jdbc:mysql://t.cn:3306/oauthdb?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=CTT
+      url: jdbc:mysql://10.110.74.20:3306/oauthdb?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=CTT
       username: root
       password: 123456
       initial-size: 1
@@ -23,8 +23,8 @@ spring:
 
   redis:
     database: 7
-    host: t.cn
-    port: 6381
+    host: 10.110.74.29
+    port: 6379
     password: redis123456aB
 
 custom:

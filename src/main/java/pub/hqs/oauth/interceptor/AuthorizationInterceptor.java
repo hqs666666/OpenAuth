@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import pub.hqs.oauth.annotation.Anonymous;
 import pub.hqs.oauth.annotation.Authorize;
 import pub.hqs.oauth.dto.ResultMsg;
 import pub.hqs.oauth.dto.user.CurrentUser;
@@ -36,6 +37,9 @@ public class AuthorizationInterceptor extends HandlerInterceptorAdapter {
         boolean hasAuthorize = className.isAnnotationPresent(Authorize.class) || handlerMethod.getMethod().isAnnotationPresent(Authorize.class);
         if(!hasAuthorize) return true;
 
+        boolean hasAnonymous = className.isAnnotationPresent(Anonymous.class) || handlerMethod.getMethod().isAnnotationPresent(Anonymous.class);
+        if(hasAnonymous) return true;
+
         String token = request.getHeader("Authorization");
         if(StringUtils.isNotBlank(token)){
             token = token.substring(7);
@@ -65,7 +69,7 @@ public class AuthorizationInterceptor extends HandlerInterceptorAdapter {
         ResultMsg resultMsg = new ResultMsg().createErrorMsg(AppStatusCode.UnAuthorization, AppStatusCode.UnAuthorization.getValue());
         ObjectMapper mapper = new ObjectMapper();
         String json = mapper.writeValueAsString(resultMsg);
-        response.setHeader("Content-Type", "application/json");
+        response.setHeader("Content-Type", "application/json;charset=utf-8");
         response.getWriter().append(json);
     }
 }
