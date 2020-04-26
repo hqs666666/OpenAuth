@@ -6,8 +6,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
-import pub.hqs.oauth.annotation.Anonymous;
-import pub.hqs.oauth.annotation.Authorize;
 import pub.hqs.oauth.annotation.Login;
 import pub.hqs.oauth.dto.ResultMsg;
 import pub.hqs.oauth.dto.user.UserDto;
@@ -59,12 +57,11 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
     }
 
     @Override
-    public void postHandle(HttpServletRequest httpServletRequest,HttpServletResponse httpServletResponse,
+    public void postHandle(HttpServletRequest request,HttpServletResponse response,
                            Object o, ModelAndView modelAndView) throws Exception {
-
     }
     @Override
-    public void afterCompletion(HttpServletRequest httpServletRequest,HttpServletResponse httpServletResponse,
+    public void afterCompletion(HttpServletRequest request,HttpServletResponse response,
                                 Object o, Exception e) throws Exception {
     }
 
@@ -73,11 +70,11 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
         session.setAttribute(AppConstants.SESSION_NAME, userDto);
     }
 
-    private void responseErrorMsg(HttpServletResponse response) throws Exception {
-        ResultMsg resultMsg = new ResultMsg().createErrorMsg(AppStatusCode.Fail, "please login");
+    private void responseErrorMsg(HttpServletResponse response, String msg) throws Exception {
+        ResultMsg resultMsg = new ResultMsg().createErrorMsg(AppStatusCode.Fail, msg);
         ObjectMapper mapper = new ObjectMapper();
         String json = mapper.writeValueAsString(resultMsg);
-        response.setHeader("Content-Type", "application/json");
+        response.setHeader("Content-Type", "application/json;charset=utf-8");
         response.getWriter().append(json);
     }
 }
