@@ -45,6 +45,7 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
             UserDto user = (UserDto) session.getAttribute(AppConstants.SESSION_NAME);
             if (user != null) return true;
 
+            if(request.getCookies() == null) return true;
             List<Cookie> cookies = Arrays.stream(request.getCookies()).filter(p -> p.getName().equals(AppConstants.SESSION_NAME)).collect(toList());
             if (cookies != null && cookies.size() > 0) {
                 String cookie = cookies.get(0).getValue();
@@ -68,13 +69,5 @@ public class LoginInterceptor extends HandlerInterceptorAdapter {
     private void setSession(HttpServletRequest request, UserDto userDto) {
         HttpSession session = request.getSession();
         session.setAttribute(AppConstants.SESSION_NAME, userDto);
-    }
-
-    private void responseErrorMsg(HttpServletResponse response, String msg) throws Exception {
-        ResultMsg resultMsg = new ResultMsg().createErrorMsg(AppStatusCode.Fail, msg);
-        ObjectMapper mapper = new ObjectMapper();
-        String json = mapper.writeValueAsString(resultMsg);
-        response.setHeader("Content-Type", "application/json;charset=utf-8");
-        response.getWriter().append(json);
     }
 }

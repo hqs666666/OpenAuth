@@ -31,7 +31,7 @@ custom:
   access-token:
     expires-hour: 2
   refresh-token:
-    expires-day: 7
+    expires-day: 1
   wechat:
     appId: "wxe480247fb8329918"
     secret: "9bda0ae78f513dbafbf984f8b3618758"
